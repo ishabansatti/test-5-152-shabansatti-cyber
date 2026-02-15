@@ -1,0 +1,45 @@
+name: Autograding with Google Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  autograde:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Install build dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libgtest-dev
+
+      # 3. Configure project (out-of-source build)
+      - name: Configure project
+        run: cmake -S . -B build
+
+      # 4. Build project
+      - name: Build project
+        run: cmake --build build -- -j$(nproc)
+
+      # 5. Run Google Tests and generate XML
+      - name: Run Google Tests
+        run: ./build/tests/CPP_AUTOGRADED --gtest_output=xml:build/results.xml
+
+      # 6. Calculate grade per test
+      - name: Calculate Grade
+        run: |
+          # Navigate to build folder
+          cd build
+
+          # Define marks per test case
+          declare -A
